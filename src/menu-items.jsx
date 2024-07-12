@@ -21,15 +21,12 @@ const icons = {
   ContactSupportOutlinedIcon: ContactSupportOutlinedIcon
 };
 
-// ==============================|| MENU ITEMS ||============================== //
-
 // eslint-disable-next-line
 export default {
   items: [
     {
       id: 'navigation',
-      title: 'Materially',
-      caption: 'Dashboard',
+      title: 'Dashboard',
       type: 'group',
       icon: icons['NavigationOutlinedIcon'],
       children: [
@@ -38,98 +35,67 @@ export default {
           title: 'Dashboard',
           type: 'item',
           icon: icons['HomeOutlinedIcon'],
-          url: '/dashboard/default'
+          url: '/dashboard'
         }
       ]
     },
     {
-      id: 'pages',
-      title: 'Pages',
-      caption: 'Prebuild Pages',
+      id: 'Product',
+      title: 'Product Management',
       type: 'group',
       icon: icons['NavigationOutlinedIcon'],
       children: [
         {
-          id: 'sample-page',
-          title: 'Sample Page',
+          id: 'Product',
+          title: 'Product',
           type: 'item',
-          url: '/sample-page',
-          icon: icons['ChromeReaderModeOutlinedIcon']
-        },
-        {
-          id: 'auth',
-          title: 'Authentication',
-          type: 'collapse',
-          icon: icons['SecurityOutlinedIcon'],
-          children: [
-            {
-              id: 'login-1',
-              title: 'Login',
-              type: 'item',
-              url: '/application/login',
-              target: true
-            },
-            {
-              id: 'register',
-              title: 'Register',
-              type: 'item',
-              url: '/application/register',
-              target: true
-            }
-          ]
+          icon: icons['HomeOutlinedIcon'],
+          url: '/dashboard/product'
         }
       ]
     },
     {
-      id: 'utils',
-      title: 'Utils',
+      id: 'navigation',
+      title: 'Order',
       type: 'group',
-      icon: icons['AccountTreeOutlinedIcon'],
+      icon: icons['NavigationOutlinedIcon'],
       children: [
         {
-          id: 'util-icons',
-          title: 'Icons',
+          id: 'Order',
+          title: 'Order',
           type: 'item',
-          url: 'https://mui.com/material-ui/material-icons/',
-          icon: icons['AppsOutlinedIcon'],
-          external: true,
-          target: true
-        },
-        {
-          id: 'util-typography',
-          title: 'Typography',
-          type: 'item',
-          url: '/utils/util-typography',
-          icon: icons['FormatColorTextOutlinedIcon']
+          icon: icons['HomeOutlinedIcon'],
+          url: '/dashboard/order'
         }
       ]
     },
     {
-      id: 'support',
-      title: 'Support',
+      id: 'account',
+      title: 'Account Management',
       type: 'group',
-      icon: icons['ContactSupportOutlinedIcon'],
+      icon: icons['NavigationOutlinedIcon'],
       children: [
         {
-          id: 'disabled-menu',
-          title: 'Disabled Menu',
+          id: 'Account',
+          title: 'Account',
           type: 'item',
-          url: '#',
-          icon: icons['BlockOutlinedIcon'],
-          disabled: true
-        },
+          icon: icons['AccountTreeOutlinedIcon'],
+          url: '/dashboard/account'
+        }
+      ]
+    },
+    {
+      id: 'Category',
+      title: 'Category Management',
+      type: 'group',
+      icon: icons['NavigationOutlinedIcon'],
+      children: [
         {
-          id: 'documentation',
-          title: 'Documentation',
+          id: 'Category',
+          title: 'Category',
           type: 'item',
-          url: 'https://codedthemes.gitbook.io/materially-react-material-documentation/',
-          icon: icons['HelpOutlineOutlinedIcon'],
-          chip: {
-            label: 'Help?',
-            color: 'primary'
-          },
-          external: true,
-          target: true
+          icon: icons['AccountTreeOutlinedIcon'],
+          url: '/dashboard/category'
         }
       ]
     }

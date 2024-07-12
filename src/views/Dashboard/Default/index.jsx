@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { subDays, format } from 'date-fns';
 
 // material-ui
 import { useTheme, styled } from '@mui/material/styles';
@@ -20,6 +21,11 @@ import MonetizationOnTwoTone from '@mui/icons-material/MonetizationOnTwoTone';
 import DescriptionTwoTone from '@mui/icons-material/DescriptionTwoTone';
 import ThumbUpAltTwoTone from '@mui/icons-material/ThumbUpAltTwoTone';
 import CalendarTodayTwoTone from '@mui/icons-material/CalendarTodayTwoTone';
+import useProduct from 'api/useProduct';
+import useCategory from 'api/useCategory';
+import useOrder from 'api/useOrder';
+import PieChart from '../PieChart';
+import useOrderDetail from 'api/useOrderDetail';
 
 // custom style
 const FlatCardBlock = styled((props) => <Grid item sm={6} xs={12} {...props} />)(({ theme }) => ({
@@ -34,46 +40,168 @@ const FlatCardBlock = styled((props) => <Grid item sm={6} xs={12} {...props} />)
   }
 }));
 
-// ==============================|| DASHBOARD DEFAULT ||============================== //
-
 const Default = () => {
   const theme = useTheme();
+  const [totalProduct, setTotalProduct] = useState(0);
+  const [totalCategory, setTotalCategory] = useState(0);
+  const [totalCategoryByProduct, setTotalCategoryByProduct] = useState({});
+  const [totalOrder, setTotalOrder] = useState(0);
+  const [totalValue, setTotalValue] = useState(0);
+  const [chart, setChartTotal] = useState();
 
+  const { getAll, getProduct } = useProduct();
+  const { get } = useCategory();
+  const { sastify } = useOrderDetail();
+
+  const handleProduct = async () => {
+    const { data, success } = await getAll();
+    if (success) {
+      setTotalProduct(data.data.length);
+    }
+  };
+
+  const handleOrder = async () => {
+    const today = new Date();
+    const formattedDate = today.toISOString().split('T')[0]; // 'YYYY-MM-DD'
+
+    const { data, success } = await sastify({
+      startDate: formattedDate,
+      endDate: formattedDate
+    });
+    if (success) {
+      setTotalOrder(data.data.length);
+      const totalUnitPrice = data.data.reduce((accumulator, currentOrder) => {
+        return accumulator + currentOrder.UnitPrice;
+      }, 0);
+      setTotalValue(totalUnitPrice);
+    }
+  };
+
+  const handleOrderPerDay = async () => {
+    const today = new Date();
+    const days = Array.from({ length: 2 }, (_, i) => subDays(today, i)).map((date) => format(date, 'yyyy-MM-dd'));
+
+    const promises = days.map((day) => sastify({ startDate: day, endDate: day }));
+    const results = await Promise.all(promises);
+
+    if (results.every((result) => result.success)) {
+      const totalUnitPrices = results.map((result) => {
+        return result.data.data.reduce((accumulator, currentOrder) => {
+          return accumulator + currentOrder.UnitPrice;
+        }, 0);
+      });
+
+      const chartData = {
+        type: 'line',
+        height: 115,
+        options: {
+          chart: {
+            sparkline: {
+              enabled: true
+            }
+          },
+          dataLabels: {
+            enabled: false
+          },
+          colors: ['#fff'],
+          stroke: {
+            curve: 'smooth',
+            width: 3
+          },
+          yaxis: {
+            min: 0,
+            max: 1000000
+          },
+          tooltip: {
+            theme: 'light',
+            fixed: {
+              enabled: false
+            },
+            x: {
+              show: false
+            },
+            y: {
+              title: {
+                formatter: () => 'Sales/Order Per Day'
+              }
+            },
+            marker: {
+              show: false
+            }
+          }
+        },
+        series: [
+          {
+            name: 'series1',
+            data: totalUnitPrices.reverse() // Đảm bảo dữ liệu được sắp xếp theo thứ tự ngày tăng dần
+          }
+        ]
+      };
+
+      setChartTotal(chartData); // Cập nhật chartData với dữ liệu mới
+    }
+  };
+
+  console.log(chart);
+  const handleCategory = async () => {
+    const { data, success } = await get();
+    if (success) {
+      setTotalCategory(data.data.length);
+      const promises = data.data.map(async (cate) => {
+        const { data: cateGory, success: cateGorySuccess } = await getProduct(cate._id);
+        if (cateGorySuccess) {
+          return { categoryName: cate.CategoryName, total: cateGory.data.length };
+        }
+        return [{ categoryName: cate.CategoryName, total: 0 }];
+      });
+      const cateGoryData = await Promise.all(promises);
+      setTotalCategoryByProduct(cateGoryData);
+    }
+  };
+  useEffect(() => {
+    handleProduct();
+    handleCategory();
+    handleOrder();
+    handleOrderPerDay();
+  }, []);
+  let labels;
+  let data;
+  if (totalCategoryByProduct && totalCategoryByProduct.length > 0) {
+    labels = totalCategoryByProduct.map((item) => item.categoryName);
+    data = totalCategoryByProduct.map((item) => item.total);
+  }
   return (
     <Grid container spacing={gridSpacing}>
       <Grid item xs={12}>
         <Grid container spacing={gridSpacing}>
           <Grid item lg={3} sm={6} xs={12}>
             <ReportCard
-              primary="$30200"
-              secondary="All Earnings"
+              primary={totalCategory}
+              secondary="Category"
               color={theme.palette.warning.main}
-              footerData="10% changes on profit"
               iconPrimary={MonetizationOnTwoTone}
               iconFooter={TrendingUpIcon}
             />
           </Grid>
           <Grid item lg={3} sm={6} xs={12}>
             <ReportCard
-              primary="145"
-              secondary="Task"
+              primary={totalProduct}
+              secondary="Products"
               color={theme.palette.error.main}
-              footerData="28% task performance"
               iconPrimary={CalendarTodayTwoTone}
               iconFooter={TrendingDownIcon}
             />
           </Grid>
           <Grid item lg={3} sm={6} xs={12}>
             <ReportCard
-              primary="290+"
-              secondary="Page Views"
+              primary={totalCategory}
+              secondary="Category"
               color={theme.palette.success.main}
-              footerData="10k daily views"
               iconPrimary={DescriptionTwoTone}
               iconFooter={TrendingUpIcon}
             />
           </Grid>
-          <Grid item lg={3} sm={6} xs={12}>
+          {/* <Grid item lg={3} sm={6} xs={12}>
             <ReportCard
               primary="500"
               secondary="Downloads"
@@ -82,7 +210,7 @@ const Default = () => {
               iconPrimary={ThumbUpAltTwoTone}
               iconFooter={TrendingUpIcon}
             />
-          </Grid>
+          </Grid> */}
         </Grid>
       </Grid>
       <Grid item xs={12}>
@@ -93,23 +221,23 @@ const Default = () => {
                 <Grid container spacing={gridSpacing}>
                   <Grid item xs={12}>
                     <SalesLineCard
-                      chartData={SalesLineCardData}
+                      chartData={chart}
                       title="Sales Per Day"
-                      percentage="3%"
+                      percentage="5%"
                       icon={<TrendingDownIcon />}
                       footerData={[
                         {
-                          value: '$4230',
-                          label: 'Total Revenue'
+                          value: totalOrder,
+                          label: 'Total order'
                         },
                         {
-                          value: '321',
+                          value: totalValue,
                           label: 'Today Sales'
                         }
                       ]}
                     />
                   </Grid>
-                  <Grid item xs={12} sx={{ display: { md: 'block', sm: 'none' } }}>
+                  {/* <Grid item xs={12} sx={{ display: { md: 'block', sm: 'none' } }}>
                     <Card>
                       <CardContent sx={{ p: '0 !important' }}>
                         <Grid container alignItems="center" spacing={0}>
@@ -144,15 +272,25 @@ const Default = () => {
                         </Grid>
                       </CardContent>
                     </Card>
-                  </Grid>
+                  </Grid> */}
                 </Grid>
               </Grid>
               <Grid item xs={12} sm={6}>
-                <RevenuChartCard chartData={RevenuChartCardData} />
+                {totalCategoryByProduct && totalCategoryByProduct.length > 0 && <PieChart labels={labels} data={data} />}
+                <span
+                  style={{
+                    margin: '10px 0',
+                    textAlign: 'center'
+                  }}
+                >
+                  {' '}
+                  <p>Total category</p>
+                </span>
+                {/* <RevenuChartCard chartData={totalCategoryByProduct} /> */}
               </Grid>
             </Grid>
           </Grid>
-          <Grid item lg={4} xs={12}>
+          {/* <Grid item lg={4} xs={12}>
             <Card>
               <CardHeader
                 title={
@@ -242,7 +380,7 @@ const Default = () => {
                 </Grid>
               </CardContent>
             </Card>
-          </Grid>
+          </Grid> */}
         </Grid>
       </Grid>
     </Grid>

@@ -1,0 +1,25 @@
+/* FormikForm.module.css */
+.formLabel {
+    font-weight: bold;
+  }
+  
+  .formControl {
+    margin-bottom: 1rem;
+  }
+  
+  .textDanger {
+    color: red;
+  }
+  
+  .submitButton {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+  }
+  
+  .submitButton:hover {
+    background-color: #0056b3;
+  }
+  
